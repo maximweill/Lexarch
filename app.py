@@ -14,11 +14,8 @@ import urllib.parse
 # Ensure local modules can be imported
 sys.path.append(os.path.dirname(__file__))
 
-try:
-    import spelling_bee_map
-except ImportError:
-    spelling_bee_map = None
-    print("Warning: spelling_bee_map.py not found.")
+import spelling_bee_map
+
 
 from data_processing import load_word_data, load_search_csv
 
