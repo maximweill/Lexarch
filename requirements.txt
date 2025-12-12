@@ -5,7 +5,6 @@ plotly
 pandas
 ridgeplot
 pandas
-ast
 numpy
 matplotlib
 plotly
