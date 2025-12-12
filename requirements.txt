@@ -7,7 +7,6 @@ ridgeplot
 pandas
 ast
 numpy
-re
 collections
 matplotlib
 urllib
