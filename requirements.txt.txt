@@ -10,7 +10,7 @@ numpy
 re
 collections
 matplotlib
-urllib.parse
+urllib
 requests
 plotly
 random
