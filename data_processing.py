@@ -2,7 +2,7 @@ import pandas as pd
 import ast
 import os
 
-def load_word_data(filename="word_dataset_with_difficulties.csv"):
+def load_word_data(filename="lexarchDataProcessing/word_dataset_with_difficulties.csv"):
     # Look in current folder OR data/ folder
     if not os.path.exists(filename):
         print(f"DEBUG: Could not find {filename} in current directory.")
@@ -19,7 +19,7 @@ def load_word_data(filename="word_dataset_with_difficulties.csv"):
         print(f"Error loading words: {e}")
         return pd.DataFrame()
 
-def load_search_csv(filename="search.csv"):
+def load_search_csv(filename="lexarchDataProcessing/search.csv"):
     # Look in current folder OR data/ folder
     if not os.path.exists(filename):
         print(f"DEBUG: Could not find {filename} in current directory.")

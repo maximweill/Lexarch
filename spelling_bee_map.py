@@ -1,18 +1,7 @@
 import pandas as pd
-import os
-import ast
-import itertools
+from data_processing import load_word_data
 
-
-input_file = 'word_dataset_with_difficulties.csv'
-if not os.path.exists(input_file):
-    print(f"Error: {input_file} not found.")
-    exit()
-
-df = pd.read_csv(input_file)
-df['Syllables'] = df['Syllables'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-df['Pronunciation'] = df['Pronunciation'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-
+df = load_word_data()
 minimum = 5/100
 maximum = 10/100
 

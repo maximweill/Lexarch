@@ -23,37 +23,20 @@ from data_processing import load_word_data, load_search_csv
 # -----------------------------------------------------------------------------
 # 1. DATA LOADING
 # -----------------------------------------------------------------------------
-words_df = load_word_data("word_dataset_with_difficulties.csv")
-search_df = load_search_csv("search.csv") 
-with open("frequency_ratios_data.json","r") as f:
+print("Loading data...")
+words_df = load_word_data("lexarchDataProcessing/word_dataset_with_difficulties.csv")
+search_df = load_search_csv("lexarchDataProcessing/search.csv") 
+with open("lexarchDataProcessing/frequency_ratios_data.json","r") as f:
      frequency_ratios = json.load(f)
-search_df["Show"] = search_df["Frequency"]**0.00001 # to reduce the effect of large frequencies
-
 # Generate Word List for Dropdowns
 if not words_df.empty:
     ALL_WORDS = sorted([str(w) for w in words_df['Word'].dropna().unique()])
 else:
     ALL_WORDS = []
+parts_df = pd.read_csv("lexarchDataProcessing/parts_database.csv")
 
-# Create "Parts Database" for Similarity Search (Exploded View)
-def create_parts_database(df):
-    if df.empty: return pd.DataFrame()
-    rows = []
-    for _, row in df.iterrows():
-        word = row['Word']
-        diff = row.get('Spelling Difficulty', 0)
-        freq = row.get('Frequency', 1)
-        # Safe eval
-        syls = ast.literal_eval(row['Syllables']) if isinstance(row['Syllables'], str) else row['Syllables']
-        prons = ast.literal_eval(row['Pronunciation']) if isinstance(row['Pronunciation'], str) else row['Pronunciation']
-        
-        if len(syls) == len(prons):
-            for s, p in zip(syls, prons):
-                rows.append([word, f"{s} ({p})", diff, freq])
-                
-    return pd.DataFrame(rows, columns=['Word', 'Signature', 'Difficulty', 'Frequency'])
+print("Done")
 
-parts_df = create_parts_database(words_df)
 
 # -----------------------------------------------------------------------------
 # 2. HELPER FUNCTIONS
@@ -332,7 +315,6 @@ def server(input, output, session):
     def treeplot():
         print(input.explore_word())
         print("Generating treeplot...")
-        #if not check_ambiguity_data(): return None 
         mode = input.explore_mode()
         data = get_word_data()
         print(data)
@@ -343,7 +325,7 @@ def server(input, output, session):
         print("Generatied data...")
 
         # Filter data for only the parents we want
-        minimum = min(10_000_000, data['Frequency'] // 10)
+        minimum = min(10_000_000, data['Frequency'])
         print("Generatied min...")
         search_df_forshow = search_df[search_df['Frequency'] >= minimum]
         print("Filtered data...")
@@ -357,36 +339,47 @@ def server(input, output, session):
         print(search_df_forshow[parent_col].isin(p_list))
         print(p_list)
         # Compute colors for children
-        df_parent["color"] = df_parent[child_col].apply(
-            lambda x: "teal" if x in c_list else "salmon"
+        df_parent["Ambiguity"] = df_parent.apply(
+        lambda row: 1 if (row[parent_col], row[child_col]) in zip(p_list, c_list) else 0,
+        axis=1
         )
 
         # Create a label for children that shows the word itself
         df_parent["label"] = df_parent[child_col]
         subtitle = "  ".join([f"{p} ({c})" for p,c in zip(p_list, c_list)])
         print("Prepared data...")
-        
+
         # Create the treemap
         fig = px.treemap(
             df_parent,
             path=[parent_col, "label","Word"],  # Use label for children
             values="Show",
-            #branchvalues="total",
-            color="color",
-            color_discrete_map={"teal": "#81C784", "salmon": "#E57373"},
+            branchvalues="total",
+            color="Ambiguity",
+            color_continuous_scale=["#E57373", "#81C784"],
             hover_data={
                 child_col: True,
                 "Pronunciation": False,
                 "Syllables": True,
                 "Frequency": True,
                 "Word":True,
-                "color": False  # Don't show color in hover
+                "Ambiguity": False  # Don't show color in hover
             },
             subtitle= subtitle
         )
         print("Created figure...")
-        fig.update_traces(textinfo="label")
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#1a1a1a', family="Lora, serif"), margin=dict(t=0, l=0, r=0, b=0))
+        fig.update_traces(
+            textinfo="label",
+            marker_line_color="white",  # border color
+            marker_line_width=0.5         # border thickness
+            )
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#1a1a1a', family="Lora, serif"),
+            margin=dict(t=0, l=0, r=0, b=0),
+            coloraxis_showscale=False
+        )
         print("Updated layout...")
         return fig
 
